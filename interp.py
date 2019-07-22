@@ -2,10 +2,10 @@
 
 import servo
 
-X_MIN = 0.0100
-Y_MIN = 0.3400
-X_MAX = 0.1100
-Y_MAX = 0.5800
+X_MIN = 0.0200
+Y_MIN = 0.2800
+X_MAX = 0.1200
+Y_MAX = 0.5200
 
 def get_servo_pos(axis, val):
     """

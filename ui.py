@@ -112,15 +112,20 @@ def run(filename):
     interp.read_command('')
     print("Ready to go! Place the marble and press Enter to run")
     input()
-    with open(filename) as file:
-        for line in file:
-            line = line.strip()
-            print(line)
-            retval = interp.read_command(line)
-            if retval != 0:
-                break
-            time.sleep(DELAY_TIME)
+    try:
+        with open(filename) as file:
+            for line in file:
+                line = line.strip()
+                print(line)
+                retval = interp.read_command(line)
+                if retval != 0:
+                    break
+                time.sleep(DELAY_TIME)
+            servo.disable_servos()
+    except KeyboardInterrupt:
+        print()
         servo.disable_servos()
+        return
 
 prev_filename = None
 

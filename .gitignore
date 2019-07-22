@@ -4,3 +4,5 @@ __pycache__/*
 # Codes
 codes/*
 
+# History file
+.ui_history

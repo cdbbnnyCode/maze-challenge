@@ -1,0 +1,9 @@
+UR
+LU
+DL
+DR
+UR
+UL
+DL
+D
+

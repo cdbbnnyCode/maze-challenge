@@ -17,7 +17,7 @@ def print_help():
     print("Marble Maze UI v1.0")
     print("Type 'viewall' to view the current programs")
     print("Type 'listall' to list the team names and numbers of all of the current programs")
-    print("Type 'edit <team> <maze number>' to edit a program")
+    print("Type 'edit <team> <maze number/color>' to edit a program")
     print("Type 'run [team] [maze number]' to run a specified program, or the one that was last edited")
     print("Type Ctrl+C or Ctrl+D to exit")
     print()
@@ -34,10 +34,10 @@ def get_filename(team, maze):
     return 'codes/%s-%s.txt' % (str(team), str(maze))
 
 def get_id_from_filename(filename):
-    match = re.match('(.+)-([0-9]+).txt', os.path.basename(filename))
+    match = re.match(r'(.+)-(.+)\.txt', os.path.basename(filename))
     if not match:
         print("%s is not a valid file name?!" % filename)
-        return ('?', '0')
+        return ('?', '?')
     return match.groups()
 
 def get_files_matching(pattern, files):
@@ -52,7 +52,7 @@ def view_all():
     files = os.listdir('codes/')
     while len(files) > 0:
         team_name = get_id_from_filename(files[0])[0]
-        team_files = sorted(get_files_matching('%s-[0-9]+.txt' % team_name, files))
+        team_files = sorted(get_files_matching(r'%s-.+\.txt' % team_name, files))
         termwidth = int(subprocess.run(['tput', 'cols'], stdout=subprocess.PIPE).stdout.decode('utf-8'))
         print("Team %s:" % team_name)
         print('-' * (termwidth - 1))
@@ -86,7 +86,7 @@ def view_all():
                     coleslaw += 1
                     continue
                 if len(col[i]) > col_width:
-                    col[i] = col[i][:(len(col[i]) - col_width - 3)] + '...'
+                    col[i] = col[i][:int(len(col[i]) - col_width - 3)] + '...'
                 print(col[i], end='\r') # End with \r to return to the beginning of the line
                 coleslaw += 1
             print()
@@ -95,7 +95,7 @@ def list_all():
     files = os.listdir('codes/')
     while len(files) > 0:
         team_name = get_id_from_filename(files[0])[0]
-        team_files = sorted(get_files_matching('%s-[0-9]+.txt' % team_name, files))
+        team_files = sorted(get_files_matching(r'%s-.+\.txt' % team_name, files))
         print("Team %s: " % team_name, end='')
         i = 0
         for f in team_files:
@@ -108,12 +108,13 @@ def list_all():
         print()
 
 def run(filename):
+    interp.init()
     servo.init_outputs()
     interp.read_command('')
     print("Ready to go! Place the marble and press Enter to run")
-    input()
     try:
-        with open(filename) as file:
+        with open(filename, 'r') as file:
+            input()
             for line in file:
                 line = line.strip()
                 print(line)
@@ -126,6 +127,9 @@ def run(filename):
         print()
         servo.disable_servos()
         return
+#    if input('Success? y/N> ') == 'y':
+#        # Create/modify the completion time
+#        open('times/' + os.path.basename(filename), 'w').close()
 
 prev_filename = None
 
@@ -138,6 +142,14 @@ def parse_input(line):
         view_all()
     elif line == 'listall':
         list_all()
+    elif line == 'test':
+        print("Press Enter or Ctrl+C to exit")
+        servo.init_outputs()
+        try:
+            input()
+        except KeyboardInterrupt:
+            pass
+        servo.disable_outputs()
     elif line == 'run':
         if prev_filename is None:
             print("You haven't edited or run any programs yet!")
@@ -146,7 +158,7 @@ def parse_input(line):
         else:
             run(prev_filename)
     else: # These commands take arguments and need regexes to parse
-        edit_match = re.match('edit (.+) ([0-9]+)', line)
+        edit_match = re.match('edit (.+) (.+)', line)
         if edit_match:
             prev_filename = get_filename(edit_match.groups()[0], edit_match.groups()[1])
             edit(prev_filename)
@@ -155,10 +167,13 @@ def parse_input(line):
                 prev_filename = None
                 return
         else:
-            run_match = re.match('run (.+) ([0-9]+)', line)
+            run_match = re.match('run (.+) (.+)', line)
             if run_match:
                 prev_filename = get_filename(run_match.groups()[0], run_match.groups()[1])
-                run(prev_filename)
+                try:
+                    run(prev_filename)
+                except FileNotFoundError:
+                    print("That program doesn't exist!")
             else:
                 print("Unknown command: %s" % line)
 
@@ -171,9 +186,14 @@ def init_readline():
         pass
     atexit.register(readline.write_history_file, histfile)
 
+def mkdir_if_not_exists(dirname):
+    if not os.path.exists(dirname):
+        os.mkdir(dirname)
+
 if __name__ == "__main__":
-    if not os.path.exists('codes/'):
-        os.mkdir('codes/')
+    mkdir_if_not_exists('codes/')
+#    mkdir_if_not_exists('times/')
+
     init_readline()
     print_help()
     try:

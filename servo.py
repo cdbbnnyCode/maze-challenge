@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import pigpio
 import atexit
+import json
 
 SERVO_HORIZ = 13
-SERVO_VERT  = 12
+SERVO_VERT = 12
 
 #########################################################
 # Low-level/initialization functions                    #
@@ -21,6 +22,10 @@ def init_outputs():
         pass # Initializing for the first time
     else:
         return # Already initialized
+    with open('calibration.json', 'r') as f:
+        conf = json.load(f)
+        SERVO_HORIZ = conf['horiz']
+        SERVO_VERT = conf['vert']
     pi = pigpio.pi()
     pi.set_mode(SERVO_HORIZ, pigpio.ALT0)
     pi.set_mode(SERVO_VERT,  pigpio.ALT0)

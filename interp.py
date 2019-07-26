@@ -1,11 +1,20 @@
 #!/usr/bin/env python3
 
 import servo
+import json
 
-X_MIN = 0.0200
-Y_MIN = 0.2800
-X_MAX = 0.1200
-Y_MAX = 0.5200
+X_MIN = 0.0100
+Y_MIN = 0.3200
+X_MAX = 0.1100
+Y_MAX = 0.5600
+
+def init():
+    with open('calibration.json', 'r') as f:
+        conf = json.load(f)
+        X_MIN = conf['xmin']
+        Y_MIN = conf['ymin']
+        X_MAX = conf['xmax']
+        Y_MAX = conf['ymax']
 
 def get_servo_pos(axis, val):
     """

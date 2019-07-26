@@ -6,6 +6,7 @@ import interp
 import time
 import random
 from tkinter import *
+import json
 
 # The Plan
 # --------
@@ -36,6 +37,16 @@ class AppStage:
     def getResults(self):
         return ''
 
+def save_calibration():
+    with open('calibration.json', 'w') as f:
+        conf = {'horiz': servo.SERVO_HORIZ,
+                'vert': servo.SERVO_VERT,
+                'xmin': interp.X_MIN,
+                'xmax': interp.X_MAX,
+                'ymin': interp.Y_MIN,
+                'ymax': interp.Y_MAX}
+        json.dump(conf, f)
+
 def nextStage():
     global currentStage, currentStageID, results
     currentStageID += 1
@@ -44,9 +55,8 @@ def nextStage():
         currentStage.destroyWidgets()
     if currentStageID == len(stages):
         root.destroy()
-        print("\n\nCalibration results:")
-        print("--------------------")
-        print(results)
+        save_calibration()
+        print("\n\nCalibration finished")
         return
     currentStage = stages[currentStageID]()
     currentStage.createWidgets(app)
@@ -244,6 +254,7 @@ class Stage4(AppStage):
 stages = [Stage0, Stage1, Stage2, Stage3, Stage4]
 
 if __name__ == "__main__":
+    interp.init()
     servo.init_outputs()
     root = Tk()
     root.title("Marble Maze Calibrator v1.0")

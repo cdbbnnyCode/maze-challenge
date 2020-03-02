@@ -107,7 +107,7 @@ x_hold = 0
 y_hold = 0
 
 while True:
-    print("%s, %s" % (x_range, y_range), end='\r')
+    print("%.2f, %.2f" % (x_range, y_range), end='\r')
     k = get_key()
     sub = ""
     if len(k) > 1:
@@ -122,13 +122,13 @@ while True:
         y_range += 0.01
     elif sub == 'D':
         y_range -= 0.01
-    elif k == 'W':
+    elif k == 'w':
         x_hold = 1
-    elif k == 'A':
+    elif k == 'a':
         y_hold = -1
-    elif k == 'S':
+    elif k == 's':
         x_hold = -1
-    elif k == 'D':
+    elif k == 'd':
         y_hold = 1
     elif k == '\r':
         print()

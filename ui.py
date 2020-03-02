@@ -207,7 +207,9 @@ def orient():
 def parse_input(line):
     global prev_filename
     line = line.strip()
-    if line == 'help':
+    if len(line) == 0:
+        return
+    elif line == 'help':
         print_help()
     elif line == 'viewall':
         view_all()

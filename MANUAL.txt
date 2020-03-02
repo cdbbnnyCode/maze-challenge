@@ -1,0 +1,276 @@
+-------------------------------Marble Maze Challenge----------------------------
+                                  S/W Version 1.2
+                                  H/W Version 3.0
+                              User Manual version 1.0
+1. Getting Started
+------------------
+
+1.1. Powering Up
+The controller has many connections, which must be attached in a certain order
+for it to boot properly:
+
+  1) Connect the servos, if they are not already connected.
+  2) Connect the keyboard and HDMI. Make sure your monitor is turned on.
+  3) Connect power to the Pi. It should start booting--ignore it for now.
+     The red LED on the Arduino may come on--this is also not an issue.
+  4) Connect power to the Arduino. The red LED should now be bright.
+
+In general, the Pi needs HDMI connected before it is powered up so that it
+detects the monitor and doesn't disable HDMI output. The Arduino seems to
+receive random commands if it is powered on before the Pi, so it needs to be
+connected last.
+
+The servos can be a bit power-hungry, so make sure to power them adequately!
+The Arduino is powered from USB, and should be connected to a power supply that
+can supply at least 2 Amps. Although this is outside the USB 2.0 spec, most USB
+phone chargers (and all USB 3.0 ports) will be able to supply 2 Amps.
+
+1.2. Writing Programs
+In this programming challenge, the player does not directly control the servos;
+instead, the objective is to first write a small program to control the maze and
+then test it.
+
+Once the Pi boots completely, you should be greeted with some help text and a
+prompt:
+
+>
+
+You can type commands whenever this prompt shows up. For example, typing
+
+> hold
+
+and pressing Enter will hold the maze at its centered position. Also, the
+
+> help
+
+command will list all of the available commands.
+To edit a program, use the `edit' command:
+
+> edit teamname mazename
+
+where `teamname' is the name of the team or player (one word), and `mazename' is
+one word describing which maze is being used. This allows the user or admin to
+keep track of the currently saved mazes using the
+
+> listall
+
+command.
+After running the `edit' command, you will enter a text editor where you can
+write your program. This editor (nano) is fairly intuitive, but has some slight
+differences from standard GUI text editors like MS Notepad, specifically:
+  1) To exit the editor, use Ctrl+X.
+  2) Cut and paste are now Ctrl+K and Ctrl+U. Ctrl+K will 'cut' the current line
+     and Ctrl+U will 'uncut' it.
+
+1.2.1. Commands
+The controller accepts a basic set of commands, most of which are case-insensitive.
+These commands can also be found in the COMMANDS.txt file.
+
+Basic Commands
+Each command is written on its own line. Each command is executed in order, once
+per second. To tilt the maze, you can use any combination of U, D, L, and R. For
+example,
+
+U
+
+tilts the maze up (away from the player), and
+
+DL
+
+tilts the maze down (toward the player) and to the left. However, a command like
+
+UD
+
+is ambiguous and causes undefined behavior. Commands are not case-sensitive:
+
+UL, uL, and ul
+
+are equivalent.
+By default, these commands move the servos full-range, but it is possible to do
+a partial move:
+
+R.5
+
+will tilt half as far to the right, and
+
+U.7L.2
+
+will tilt 70% of the way up and 20% of the way left. This provides near-infinite
+control of the positions of the servos. Finally, a blank line:
+
+
+
+will move the servos back to their center positions.
+
+Advanced Commands
+Along with the normal movement commands, there are interpreter directives. These
+commands control the behavior of the parser and don't directly move the servos.
+There is currently only one interpreter directive:
+
+.time <seconds>
+
+sets the delay time between all commands executed after it. For example,
+
+U
+D
+.time .5
+L
+R
+
+will run U and D for one second (the default), but the last three commands will
+only run for .5 seconds.
+
+1.3. Running Your Program
+After writing your program, use Ctrl+S to save and Ctrl+X to exit. You will
+return to the prompt, where you can simply type
+
+> run
+
+to run your program. To run a different program than the one you just edited,
+specify the team and maze name after the `run' command:
+
+> run teamname mazename
+
+If the program doesn't work, you can get back to the editor with the same `edit'
+command you used the first time. If you don't feel like typing it out every
+time, you can use the up arrow key to look through your command history.
+
+1.4. Shutting Down
+
+Being (almost) a normal computer, the Raspberry Pi should be shut down properly.
+Although simply pulling the plug will most likely do no harm, you run the risk
+of corrupting the SD card or losing data. To shut down the Pi properly:
+
+  1) Disconnect the Arduino. This ensures that it doesn't randomly drive the
+     servos after the Pi shuts down.
+  2) Exit the maze challenge using Ctrl+C.
+  3) Type
+
+     sudo halt
+
+     and press Enter.
+  4) Wait for the green LED on the Pi to stop blinking before unplugging it.
+
+You can now unplug the power, keyboard, and HDMI from the controller.
+
+2. Calibration
+--------------
+
+To calibrate the tilt board, exit the maze challenge with Ctrl+C and run
+
+  python calibrate.py
+
+The calibrator will guide you through a series of steps to get the board
+properly centered and adjusted, and will automatically write a calibration file.
+
+3. Low-Level Details
+--------------------
+
+3.1. Hardware and Communication
+The controller is comprised of two parts:
+
+  * A Raspberry Pi Zero W (yes, it has onboard WiFi; no, it isn't used)
+  * A (knockoff) Arduino Nano to drive the servos
+
+The Raspberry Pi communicates with the Arduino over a single wire--the Arduino's
+TX output is not used to avoid extra logic level conversion circuitry, as the Pi
+cannot handle the 5V logic. Communication is via UART at 115200 baud. The
+Arduino is programmed to accept three basic byte commands:
+
+Move servo: <servo id> <position>
+Stop servo: <servo id + 0x80>
+Synchronize: 0xFF
+
+The `Synchronize' command is used to reset if a half of a `Move servo' command
+is sent erroneously. `servo id' is either 0 or 1, where 0 drives the servo on
+pin 2 and 1 drives the servo on pin 3. `position' is only allowed to be between
+0 and 180, partially for compatibility with the `Synchronize' command and mostly
+because of the Arduino Servo library only taking inputs from 0 to 180.
+
+3.2. Source Code
+This project is written in Python and MIT licensed, and thus the source code is
+freely available. The Arduino code can be found in the ServoDrive directory.
+The code can also be found on GitHub:
+
+https://github.com/cdbbnnyCode/maze-challenge
+
+3.3. Updating
+There is no `proper' mechanism for updating any of this software, but if you
+feel inclined to do so, here are some instructions:
+
+3.3.1. Updating the Pi Software
+This is actually fairly simple--if you can somehow connect to the Internet.
+Although the Pi has onboard WiFi, getting it to connect to anything can be a
+pain. However, the graphical desktop is still available if you need it, just run
+
+  startx
+
+After you are connected to the Internet, open a terminal (it will load into the
+game), exit the game with Ctrl+C, and use
+
+  git pull
+
+to update.
+
+3.3.2. Updating the Arduino Software
+This is here mostly for reference--it is waaaay too much work, and is probably
+unnecessary. However, I had to go through this process to program each of these
+controllers, and it might prove useful in the future.
+
+You will need (initially):
+  * A computer (the Pi might work for this but you need a USB hub)
+  * Arduino software (this is already installed on the Pi, but runs very slowly;
+    you may want to install arduino-cli if you have to use it)
+  * A soldering iron
+  * A hot glue gun
+
+Step 1: Download the GitHub repository above if you haven't already. If you 
+already have this downloaded, make sure it is up to date using `git pull'. Open
+`ServoDrive.ino' in the Arduino software.
+
+Step 2: Remove the Arduino from the Pi case and desolder the wire connected to
+`RX0'. This is to avoid accidentally sending 5V logic signals to the Pi during
+programming. You can also remove the GND connection to the Pi, but it is not
+required. DISCONNECT THE SERVOS! You will not want them connected.
+
+Step 3: Connect the Arduino to the computer over USB. Select the proper board
+(Nano) and port. Try to upload. THIS MAY FAIL--the knockoff Arduinos use a
+knockoff USB controller chip that usually fails to work properly. If the upload
+does not work, continue to Step 4; if it succeeds, you may skip to Step 7.
+
+Step 4:
+You will now need a USB-serial converter--one of the 5V kind, NOT RS-232.
+Something along the lines of SparkFun's FTDI Basic; even another Arduino will
+work just fine.
+
+Remove the GND wire to the Pi; solder new wires to VIN, GND, RX0 and TX1. I
+recommend using solid-core wire (I used CAT5 cable for the original wiring)
+for this as it is easy to stick into the already solder-filled holes that were
+used for initial programming.
+
+Step 5: Connect these new wires to the USB-serial converter:
+          |     |
+        5V|-----|VIN
+ USB   GND|-----|GND Arduino
+Serial  TX|-----|RX0  Nano
+        RX|-----|TX1
+          |     |
+Step 6: Connect the USB-serial converter (NOT the Arduino) to your computer
+and try uploading again. Make sure to hit the reset button right before it
+starts uploading because there is no auto-reset! You may need to try a few times
+to get your timing right.
+
+Step 7: Remove the programming wires (VIN, GND, RX0, TX1) if necessary and
+reconnect the wires from the Pi as shown:
+
+  Pi           Arduino
+-----.          |##| (USB)
+1 Oo |       |-<|**|>-|
+  oo | GND   ~~~~~~~~~~
+  o*-|-------|GND  RX0|        I apologize for the ASCII art. It's terrible.
+  o*-|-------|-------^|
+~~~~~~ TXD   |________|
+
+Step 8: Stick the Arduino back on the case the way it was wth hot glue.
+
+Step 9: Wash your hands--I used leaded solder to assemble these controllers.

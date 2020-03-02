@@ -6,6 +6,8 @@ import time
 import readline
 import shlex
 import atexit
+import json
+import getch
 
 import interp
 import servo
@@ -21,6 +23,9 @@ def print_help():
     print("Type 'edit <team> <maze number/color>' to edit a program")
     print("Type 'run [team] [maze number]' to run a specified program, or the one that was last edited")
     print("Type 'hold' to initialize the servos")
+    print("Type 'stop' to stop the servos")
+    print("Type 'orient' to set the tilt directions")
+    print("Type 'help' to show this help")
     print("Type Ctrl+C or Ctrl+D to exit")
     print()
     print("In the editor:")
@@ -110,7 +115,7 @@ def list_all():
         print()
 
 def run(filename):
-    servo.init_outputs()
+    global DELAY_TIME
     interp.read_command('')
     print("Ready to go! Place the marble and press Enter to run")
     try:
@@ -138,11 +143,66 @@ def run(filename):
                 time.sleep(DELAY_TIME)
     except KeyboardInterrupt:
         print()
+    servo.disable_servos() # Comment this out to keep the servos initialized after finishing
 #    if input('Success? y/N> ') == 'y':
 #        # Create/modify the completion time
 #        open('times/' + os.path.basename(filename), 'w').close()
 
 prev_filename = None
+
+def get_key():
+    k = getch.getch()
+    if k == '\x03':
+        raise KeyboardInterrupt()
+    if k == '\x1B':
+        getch.getch() # [
+        sub = getch.getch()
+        return "\\" + sub
+    else:
+        return k
+
+def get_orientation():
+    dir = None
+    while True:
+        k = get_key()
+        sub = ""
+        if len(k) > 1:
+            sub = k[1]
+
+        # A=Up, B=Down, C=Right, D=Left
+        if sub == "A":
+            interp.read_command("U")
+            dir = "+x"
+        elif sub == "B":
+            interp.read_command("D")
+            dir = "-x"
+        elif sub == "C":
+            interp.read_command("R")
+            dir = "+y"
+        elif sub == "D":
+            interp.read_command("L")
+            dir = "-y"
+        elif k == "\r":
+            if dir is not None:
+                break
+    return dir
+
+def orient():
+    print("Set the tilt direction")
+    print("Use the arrow keys to point the maze DOWN (towards you)")
+    print("Press Enter when done")
+    down = get_orientation()
+    interp.read_command('')
+    print("Use the arrow keys to point the maze to the LEFT; press Enter to finish")
+    left = get_orientation()
+    print("Down: %s, left: %s" % (down, left))
+    with open("/tmp/orientation.json", 'w') as f:
+        conf = {"down": down, "left": left}
+        json.dump(conf, f)
+    servo.disable_servos()
+    # Reload everything
+    servo.init_outputs()
+    interp.init()
 
 def parse_input(line):
     global prev_filename
@@ -154,8 +214,11 @@ def parse_input(line):
     elif line == 'listall':
         list_all()
     elif line == 'hold':
-        servo.init_outputs()
         interp.read_command('')
+    elif line == 'stop':
+        servo.disable_servos()
+    elif line == 'orient':
+        orient()
     elif line == 'run':
         if prev_filename is None:
             print("You haven't edited or run any programs yet!")
@@ -211,6 +274,10 @@ if __name__ == "__main__":
 #    mkdir_if_not_exists('times/')
 
     interp.init()
+    servo.init_outputs()
+    if not os.path.exists('/tmp/orientation.json'):
+        orient()
+
     init_readline()
     print_help()
     try:

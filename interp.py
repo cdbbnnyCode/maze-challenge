@@ -3,10 +3,10 @@
 import servo
 import json
 
-X_MIN = 0.0100
-Y_MIN = 0.3200
-X_MAX = 0.1100
-Y_MAX = 0.5600
+# X_MIN = 0.0100
+# Y_MIN = 0.3200
+# X_MAX = 0.1100
+# Y_MAX = 0.5600
 
 def init():
     global X_MIN, X_MAX, Y_MIN, Y_MAX
@@ -16,6 +16,19 @@ def init():
         Y_MIN = conf['ymin']
         X_MAX = conf['xmax']
         Y_MAX = conf['ymax']
+    try:
+        with open('/tmp/orientation.json', 'r') as f:
+            conf = json.load(f)
+            if '+' in conf['down']: # Should be - ; swap otherwise
+                temp = X_MIN
+                X_MIN = X_MAX
+                X_MAX = temp
+            if '+' in conf['left']: # Should also be -
+                temp = Y_MIN
+                Y_MIN = Y_MAX
+                Y_MAX = temp
+    except:
+        pass
 
 def get_servo_pos(axis, val):
     """

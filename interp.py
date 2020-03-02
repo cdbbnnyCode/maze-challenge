@@ -9,6 +9,7 @@ X_MAX = 0.1100
 Y_MAX = 0.5600
 
 def init():
+    global X_MIN, X_MAX, Y_MIN, Y_MAX
     with open('calibration.json', 'r') as f:
         conf = json.load(f)
         X_MIN = conf['xmin']

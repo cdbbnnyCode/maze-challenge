@@ -24,6 +24,7 @@ print()
 get_key()
 
 servo.init_outputs()
+interp.init()
 
 ###############################
 # Step 1: Choose the horizontal tilt servo
@@ -161,5 +162,6 @@ with open('calibration.json', 'w') as f:
             'xmax': interp.X_MAX,
             'ymin': interp.Y_MIN,
             'ymax': interp.Y_MAX}
+    print(conf)
     json.dump(conf, f)
 

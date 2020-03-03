@@ -29,14 +29,14 @@ def init_outputs():
         conf = json.load(f)
         SERVO_HORIZ = conf['horiz']
         SERVO_VERT = conf['vert']
-    try:
-        with open('/tmp/orientation.json', 'r') as f:
-            conf = json.load(f)
-            if 'y' in conf['down']: # Down should be the -x direction
-                SERVO_HORIZ = 25 - SERVO_HORIZ # swap
-                SERVO_VERT = 25 - SERVO_VERT # swap
-    except: # I can't remember the exception and it doesn't matter
-        pass
+#    try:
+#        with open('/tmp/orientation.json', 'r') as f:
+#            conf = json.load(f)
+#            if 'y' in conf['down']: # Down should be the -x direction
+#                SERVO_HORIZ = 25 - SERVO_HORIZ # swap
+#                SERVO_VERT = 25 - SERVO_VERT # swap
+#    except: # I can't remember the exception and it doesn't matter
+#        pass
     ser = serial.Serial(SERIAL_PORT, 115200) # Initialize serial communication
     ser.write(b'\xFF') # Reset the state
     atexit.register(disable_servos) # Disable the servos on exit

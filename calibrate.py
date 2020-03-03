@@ -30,7 +30,7 @@ interp.init()
 # Step 1: Choose the horizontal tilt servo
 print("Choose an axis")
 print("Press 1 or 2 to test one, and press Enter to continue")
-print("Choose the option that tilts up and down")
+print("Choose the option that tilts left and right")
 
 def test_servo(pin):
     servo.set_servo_angle(pin, 0)

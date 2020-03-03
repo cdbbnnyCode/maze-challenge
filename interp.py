@@ -9,7 +9,7 @@ import json
 # Y_MAX = 0.5600
 
 def init():
-    global X_MIN, X_MAX, Y_MIN, Y_MAX
+    global X_MIN, X_MAX, Y_MIN, Y_MAX, orientation
     with open('calibration.json', 'r') as f:
         conf = json.load(f)
         X_MIN = conf['xmin']
@@ -19,14 +19,22 @@ def init():
     try:
         with open('/tmp/orientation.json', 'r') as f:
             conf = json.load(f)
-            if '+' in conf['down']: # Should be - ; swap otherwise
-                temp = X_MIN
-                X_MIN = X_MAX
-                X_MAX = temp
-            if '+' in conf['left']: # Should also be -
-                temp = Y_MIN
-                Y_MIN = Y_MAX
-                Y_MAX = temp
+            orientation = conf
+#            if '+' in conf['down']: # Should be - ; swap otherwise
+#                temp = X_MIN
+#                X_MIN = X_MAX
+#                X_MAX = temp
+#            if '+' in conf['left']: # Should also be -
+#                temp = Y_MIN
+#                Y_MIN = Y_MAX
+#                Y_MAX = temp
+#            if 'y' in conf['down']: # should be -x
+#                tmin = X_MIN
+#                X_MIN = Y_MIN
+#                Y_MIN = tmin
+#                tmax = X_MAX
+#                X_MAX = Y_MAX
+#                Y_MAX = tmax
     except:
         pass
 
@@ -53,6 +61,18 @@ def end():
     Disable the servo outputs at the end of the program.
     """
     servo.disable_servos()
+
+def reorient(x, y):
+    rx = x
+    ry = y
+    if orientation['down'] == '+x':   rx = -x
+    elif orientation['down'] == '+y': ry = -x
+    elif orientation['down'] == '-y': ry =  x
+    if orientation['left'] == '+y':   ry = -y
+    elif orientation['left'] == '+x': rx = -y
+    elif orientation['left'] == '-x': rx =  y
+    print("%s: (%.1f,%.1f) -> (%.1f,%.1f)" % (orientation, x, y, rx, ry))
+    return (rx, ry)
 
 def read_command(line):
     """
@@ -92,6 +112,7 @@ def read_command(line):
             y = amount
         
         i += 1
+    x, y = reorient(x, y)
     print("X: %.4f, Y: %.4f" % (x, y))
     servo.set_servo_angle(servo.SERVO_VERT, get_servo_pos('X', x))
     servo.set_servo_angle(servo.SERVO_HORIZ, get_servo_pos('Y', y))

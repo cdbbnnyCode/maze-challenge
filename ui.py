@@ -168,7 +168,8 @@ def get_orientation():
         sub = ""
         if len(k) > 1:
             sub = k[1]
-
+        # reset the orientation
+        interp.orientation = {"down": "-x", "left": "-y"}
         # A=Up, B=Down, C=Right, D=Left
         if sub == "A":
             interp.read_command("U")
@@ -192,10 +193,14 @@ def orient():
     print("Use the arrow keys to point the maze DOWN (towards you)")
     print("Press Enter when done")
     down = get_orientation()
+    if down == "-x":   left = "-y"
+    elif down == "+x": left = "+y"
+    elif down == "-y": left = "+x"
+    elif down == "+y": left = "-x"
     interp.read_command('')
-    print("Use the arrow keys to point the maze to the LEFT; press Enter to finish")
-    left = get_orientation()
-    print("Down: %s, left: %s" % (down, left))
+#    print("Use the arrow keys to point the maze to the LEFT; press Enter to finish")
+#    left = get_orientation()
+#    print("Down: %s, left: %s" % (down, left))
     with open("/tmp/orientation.json", 'w') as f:
         conf = {"down": down, "left": left}
         json.dump(conf, f)

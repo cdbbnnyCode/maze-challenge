@@ -10,7 +10,7 @@ import interp
 import servo
 
 
-DELAY_TIME = 1 # Delay time in seconds
+DELAY_TIME = .1 # Delay time in seconds
 
 
 def print_help():
@@ -19,6 +19,7 @@ def print_help():
     print("Type 'listall' to list the team names and numbers of all of the current programs")
     print("Type 'edit <team> <maze number/color>' to edit a program")
     print("Type 'run [team] [maze number]' to run a specified program, or the one that was last edited")
+    print("Type 'hold' to initialize the servos")
     print("Type Ctrl+C or Ctrl+D to exit")
     print()
     print("In the editor:")
@@ -108,7 +109,6 @@ def list_all():
         print()
 
 def run(filename):
-    interp.init()
     servo.init_outputs()
     interp.read_command('')
     print("Ready to go! Place the marble and press Enter to run")
@@ -122,11 +122,8 @@ def run(filename):
                 if retval != 0:
                     break
                 time.sleep(DELAY_TIME)
-            servo.disable_servos()
     except KeyboardInterrupt:
         print()
-        servo.disable_servos()
-        return
 #    if input('Success? y/N> ') == 'y':
 #        # Create/modify the completion time
 #        open('times/' + os.path.basename(filename), 'w').close()
@@ -142,14 +139,9 @@ def parse_input(line):
         view_all()
     elif line == 'listall':
         list_all()
-    elif line == 'test':
-        print("Press Enter or Ctrl+C to exit")
+    elif line == 'hold':
         servo.init_outputs()
-        try:
-            input()
-        except KeyboardInterrupt:
-            pass
-        servo.disable_outputs()
+        interp.read_command('')
     elif line == 'run':
         if prev_filename is None:
             print("You haven't edited or run any programs yet!")
@@ -194,6 +186,7 @@ if __name__ == "__main__":
     mkdir_if_not_exists('codes/')
 #    mkdir_if_not_exists('times/')
 
+    interp.init()
     init_readline()
     print_help()
     try:

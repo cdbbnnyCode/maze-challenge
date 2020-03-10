@@ -1,8 +1,9 @@
 # Python cache
-__pycache__/*
+__pycache__/
 
 # Codes
-codes/*
+codes/
+.session1/
 
 # History file
 .ui_history

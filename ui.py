@@ -4,13 +4,14 @@ import subprocess
 import re
 import time
 import readline
+import shlex
 import atexit
 
 import interp
 import servo
 
 
-DELAY_TIME = .1 # Delay time in seconds
+DELAY_TIME = 1 # Delay time in seconds
 
 
 def print_help():
@@ -118,9 +119,22 @@ def run(filename):
             for line in file:
                 line = line.strip()
                 print(line)
-                retval = interp.read_command(line)
-                if retval != 0:
-                    break
+                if line.startswith('.'):
+                    # . commands are special and parsed by the ui
+                    directive = shlex.split(line[1:])
+                    if directive[0] == 'time':
+                        try:
+                            DELAY_TIME = float(directive[1])
+                        except ValueError:
+                            print("Syntax error: '%s' is not a number" % directive[1])
+                            break
+                        except IndexError:
+                            print("Syntax error: .time requires an argument")
+                            break
+                else:
+                    retval = interp.read_command(line)
+                    if retval != 0:
+                        break
                 time.sleep(DELAY_TIME)
     except KeyboardInterrupt:
         print()

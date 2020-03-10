@@ -58,7 +58,7 @@ def read_command(line):
         while i < len(line)-1 and line[i+1] in '-.0123456789':
             i += 1
             amt_str += line[i]
-        if amt_str is not '':
+        if amt_str != '':
             try:
                 amount = float(amt_str)
             except ValueError:

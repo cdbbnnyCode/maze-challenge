@@ -15,13 +15,15 @@ def get_key():
         sub = getch.getch()
         return "\\" + sub
     else:
-        return sub
+        return k
 
 print("Marble Maze Calibrator")
 print("Version 1.1")
 print("Press any key to begin")
 print()
 get_key()
+
+servo.init_outputs()
 
 ###############################
 # Step 1: Choose the horizontal tilt servo

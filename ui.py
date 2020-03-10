@@ -15,7 +15,7 @@ DELAY_TIME = 1 # Delay time in seconds
 
 
 def print_help():
-    print("Marble Maze UI v1.0")
+    print("Marble Maze UI v1.1")
     print("Type 'viewall' to view the current programs")
     print("Type 'listall' to list the team names and numbers of all of the current programs")
     print("Type 'edit <team> <maze number/color>' to edit a program")
@@ -51,7 +51,7 @@ def get_files_matching(pattern, files):
     return out
 
 def view_all():
-    files = os.listdir('codes/')
+    files = get_files_matching(r'.+-.+\.txt', os.listdir('codes/'))
     while len(files) > 0:
         team_name = get_id_from_filename(files[0])[0]
         team_files = sorted(get_files_matching(r'%s-.+\.txt' % team_name, files))
@@ -94,7 +94,7 @@ def view_all():
             print()
 
 def list_all():
-    files = os.listdir('codes/')
+    files = get_files_matching(r'.+-.+\.txt', os.listdir('codes/'))
     while len(files) > 0:
         team_name = get_id_from_filename(files[0])[0]
         team_files = sorted(get_files_matching(r'%s-.+\.txt' % team_name, files))

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-import pigpio
+
+import serial
 import atexit
 import json
 
-SERVO_HORIZ = 13
+SERVO_HORIZ = 13 # These are kept the same for compatibility, even though 0 and 1 are actually used
 SERVO_VERT = 12
+SERIAL_PORT = '/dev/serial0'
 
 #########################################################
 # Low-level/initialization functions                    #
@@ -14,7 +16,7 @@ def init_outputs():
     """
     Initialize the GPIO outputs
     """
-    global pi
+    global ser
     global __initialized
     try:
         __initialized
@@ -26,40 +28,18 @@ def init_outputs():
         conf = json.load(f)
         SERVO_HORIZ = conf['horiz']
         SERVO_VERT = conf['vert']
-    pi = pigpio.pi()
-    pi.set_mode(SERVO_HORIZ, pigpio.ALT0)
-    pi.set_mode(SERVO_VERT,  pigpio.ALT0)
+    ser = serial.Serial(SERIAL_PORT, 115200) # Initialize serial communication
+    ser.write(b'\xFF') # Reset the state
     atexit.register(disable_servos) # Disable the servos on exit
     __initialized = True
-
-
-def set_pwm(pin, percent):
-    """
-    Set the output pin's PWM value to a certain percent (0-100) duty cycle at 50Hz.
-    For servos, the inputs must be between 5 and 10 percent, or 1-2ms (although some servos accept a wider range).
-    This function will generate an inverted PWM signal (i.e. only LOW for the specified duty cycle) to work properly with the inverting level shifters.
-    """
-    # This function accomodates for the inverting level shifters
-    pi.hardware_PWM(pin, 50, int((100 - percent) * 10000)) # 10000 * 100 = 1 million
-
-def set_servo_us(pin, us):
-    """
-    Sets the PWM duty cycle of the pin based on the desired pulse width, in microseconds.
-    For servos, this should range between 1000 and 2000.
-    """
-    # Each cycle is 20ms == 20,000us
-    # set_pwm wants a percentage, so multiply by 100
-    # duty cycle = (us / 20,000) * 100
-    duty_cycle = (float(us) / 200)
-    set_pwm(pin, duty_cycle)
 
 #########################################################
 # High-level user functions                             #
 #########################################################
 
-# For HS-485HB
-SERVO_MIN_US = 560
-SERVO_MAX_US = 2400
+# 0-180 'degree' inputs to the Arduino
+SERVO_MIN_ANGLE = 5
+SERVO_MAX_ANGLE = 180
 
 def set_servo_angle(pin, pos):
     """
@@ -70,9 +50,11 @@ def set_servo_angle(pin, pos):
     if normalized > 1: normalized = 1
     elif normalized < 0: normalized = 0
 
-    # Scale 0--1 to SERVO_MIN_US--SERVO_MAX_US
-    us = SERVO_MIN_US + normalized * (SERVO_MAX_US - SERVO_MIN_US)
-    set_servo_us(pin, us)
+    # Scale 0--1 between minimum and maximum angle
+    angle = int(SERVO_MIN_ANGLE + normalized * (SERVO_MAX_ANGLE - SERVO_MIN_ANGLE))
+    # Send the command
+    ser.write(b'\xFF') # Synchronization just in case
+    ser.write(bytes([pin - 12, angle]))
 
 def disable_servo(pin):
     """
@@ -80,7 +62,8 @@ def disable_servo(pin):
     Note that this method does NOT work for digital servos--they will
       continue to run until they are powered off.
     """
-    set_pwm(pin, 0) # Turning off PWM should stop the servo unless something is really, really wrong
+    ser.write(b'\xFF')
+    ser.write(bytes([(pin - 12) + 128])) # Turning off PWM should stop the servo unless something is really, really wrong
 
 def disable_servos():
     """

@@ -17,7 +17,7 @@ DELAY_TIME = 1 # Delay time in seconds
 
 
 def print_help():
-    print("Marble Maze UI v1.1")
+    print("Marble Maze UI v1.2")
     print("Type 'viewall' to view the current programs")
     print("Type 'listall' to list the team names and numbers of all of the current programs")
     print("Type 'edit <team> <maze number/color>' to edit a program")

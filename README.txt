@@ -1,5 +1,5 @@
 Marble Maze Challenge
-Version 1.0
+Version 1.2
 ---------------------
 
 HOW TO USE
